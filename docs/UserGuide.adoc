@@ -241,6 +241,12 @@ Sets user profile of Herbert Williams.
 Clears all entries from HackEat. +
 Format: `clear`
 
+=== Order food: `order` [Proposed to finish in v1.5]
+
+Orders food given an index. If no index is given, a food will be chosen for you. May take some time as phone call
+is in progress.
+Format: `order [INDEX]`
+
 === Exiting the program : `exit`
 
 Exits the program. +

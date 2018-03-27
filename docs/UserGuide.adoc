@@ -243,9 +243,10 @@ Format: `clear`
 
 === Order food: `order` [Proposed to finish in v1.5]
 
-Orders food given an index. If no index is given, a food will be chosen for you. May take some time as phone call
-is in progress.
-Format: `order [INDEX]`
+Orders food given with or without an index. If no index is given, a food will be chosen for you. May take some time as
+phone call is in progress. Otherwise, will order the food at the specified index.
+
+Format: `order [INDEX]` or `order`
 
 === Exiting the program : `exit`
 

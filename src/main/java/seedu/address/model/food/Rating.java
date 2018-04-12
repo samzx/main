@@ -7,6 +7,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 
 /**
  * Represents a Food's rating in HackEat.
+ * Guarantees: immutable; is valid as declared in {@link #isValidRating(String)}
  */
 public class Rating {
 
@@ -15,7 +16,7 @@ public class Rating {
     public static final String MESSAGE_RATING_CONSTRAINTS =
             "Please enter a number between 0 to " + MAX_RATING;
 
-    /**
+    /*
      * User must enter only a single digit.
      */
     public static final String RATING_VALIDATION_REGEX = "\\b\\d\\b";
@@ -34,7 +35,7 @@ public class Rating {
     }
 
     /**
-     * Returns true if a given string is a valid food rating.
+     * Returns true if a given string is a valid food email.
      */
     public static boolean isValidRating(String test) {
         if (test.matches(RATING_VALIDATION_REGEX)) {
@@ -48,22 +49,21 @@ public class Rating {
 
     /**
      * Method to display ratings as stars instead of a number
-     * @return a string of colored or uncolored stars
+     * @return a string of colored or uncolore stars
      */
     public static String displayString(String value) {
-        int count = Integer.parseInt(value);
-
-        StringBuilder stringBuilder = new StringBuilder();
+        final int rating = Integer.parseInt(value);
+        int count = rating;
+        String stars = "";
         for (int i = 0; i < MAX_RATING; i++) {
             if (count > 0) {
-                stringBuilder.append("★");
+                stars += "★";
             } else {
-                stringBuilder.append("★");
+                stars += "☆";
             }
             count--;
         }
-
-        return stringBuilder.toString();
+        return stars;
     }
 
     @Override

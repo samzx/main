@@ -3,6 +3,9 @@ package seedu.address.logic.parser;
 import static seedu.address.commons.core.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_APPLE;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_BANANA;
+import static seedu.address.logic.commands.CommandTestUtil.ALLERGY_DESC_LACTOSE;
+import static seedu.address.logic.commands.CommandTestUtil.INVALID_ADDRESS_DESC;
+import static seedu.address.logic.commands.CommandTestUtil.INVALID_ALLERGY_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_NAME_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_PHONE_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_APPLE;
@@ -15,7 +18,6 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_APPLE;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BANANA;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_APPLE;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BANANA;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_ALLERGIES;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.model.util.SampleDataUtil.getAllergySet;
@@ -29,22 +31,17 @@ import seedu.address.model.food.Phone;
 import seedu.address.model.food.allergy.Allergy;
 import seedu.address.model.user.UserProfile;
 
-//@@author {tohcheryl}
+//@@author tohcheryl
 public class UserConfigCommandParserTest {
 
-    // temp fix
-    private static final String ALLERGIES_DESC_APPLE = " " + PREFIX_ALLERGIES + "lactose";
-    private static final String INVALID_ALLERGIES_DESC = " " + PREFIX_ALLERGIES + "#lactose";
-
     private UserConfigCommandParser parser = new UserConfigCommandParser();
-
 
     @Test
     public void parse_allFieldsPresent_success() {
         UserProfile expectedUserProfile = new UserProfile(new Name(VALID_NAME_APPLE), new Phone(VALID_PHONE_APPLE),
                 new Address(VALID_ADDRESS_APPLE), getAllergySet("lactose"));
 
-        assertParseSuccess(parser, NAME_DESC_APPLE + PHONE_DESC_APPLE + ADDRESS_DESC_APPLE + ALLERGIES_DESC_APPLE,
+        assertParseSuccess(parser, NAME_DESC_APPLE + PHONE_DESC_APPLE + ADDRESS_DESC_APPLE + ALLERGY_DESC_LACTOSE,
                 new UserConfigCommand(expectedUserProfile));
     }
 
@@ -60,7 +57,9 @@ public class UserConfigCommandParserTest {
         assertParseFailure(parser, NAME_DESC_BANANA + VALID_PHONE_BANANA + ADDRESS_DESC_BANANA,
                 expectedMessage);
 
-        // missing address prefix - to be implemented
+        // missing address prefix
+        assertParseFailure(parser, NAME_DESC_BANANA + PHONE_DESC_BANANA + VALID_ADDRESS_BANANA,
+                expectedMessage);
 
         // all prefixes missing
         assertParseFailure(parser, VALID_NAME_BANANA + VALID_PHONE_BANANA + VALID_ADDRESS_BANANA,
@@ -77,10 +76,12 @@ public class UserConfigCommandParserTest {
         assertParseFailure(parser, NAME_DESC_BANANA + INVALID_PHONE_DESC + ADDRESS_DESC_BANANA,
                 Phone.MESSAGE_PHONE_CONSTRAINTS);
 
-        // invalid address - to be implemented
+        // invalid address
+        assertParseFailure(parser, NAME_DESC_BANANA + PHONE_DESC_BANANA + INVALID_ADDRESS_DESC,
+                Address.MESSAGE_ADDRESS_CONSTRAINTS);
 
         // invalid allergies
         assertParseFailure(parser, NAME_DESC_BANANA + PHONE_DESC_BANANA + ADDRESS_DESC_BANANA
-                + INVALID_ALLERGIES_DESC, Allergy.MESSAGE_ALLERGY_CONSTRAINTS);
+                + INVALID_ALLERGY_DESC, Allergy.MESSAGE_ALLERGY_CONSTRAINTS);
     }
 }

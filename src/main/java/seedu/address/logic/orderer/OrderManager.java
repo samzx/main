@@ -2,22 +2,17 @@ package seedu.address.logic.orderer;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Properties;
+import java.net.URLConnection;
 import java.util.UUID;
 
-import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 
 import seedu.address.model.food.Food;
 import seedu.address.model.user.UserProfile;
 
-//@@author {samzx}
+//@@author samzx
 
 /**
  * Orders food in HackEat.
@@ -26,31 +21,18 @@ public class OrderManager {
 
     public static final String CONTENT_SEPERATOR = "//";
 
-    private static final String REMOTE_SERVER = "https://mysterious-temple-83678.herokuapp.com/";
-    private static final String CREATE_PATH = "create/";
+    public static final String REMOTE_SERVER = "https://mysterious-temple-83678.herokuapp.com/";
+    public static final String CREATE_PATH = "create/";
+    public static final String ORDER_PATH = "order/";
+    public static final String REQUEST_METHOD =  "POST";
+    public static final String CHARSET_ENCODING = "UTF-8";
 
-    private static final String PROPERTY_AUTH_HEADER = "mail.smtp.auth";
-    private static final String PROPERTY_AUTH = "true";
-    private static final String PROPERTY_TLS_HEADER = "mail.smtp.starttls.enable";
-    private static final String PROPERTY_TLS = "true";
-    private static final String PROPERTY_HOST_HEADER = "mail.smtp.host";
-    private static final String PROPERTY_HOST = "smtp.gmail.com";
-    private static final String PROPERTY_PORT_HEADER = "mail.smtp.port";
-    private static final String PROPERTY_PORT = "587";
+    public static final String CANNED_SPEECH_MESSAGE = "Hello, my name is %s. Could I order a %s to %s?";
 
-    private static final String CANNED_SPEECH_MESSAGE = "Hello, my name is %s. Could I order a %s to %s?";
-    private static final String SUBJECT_LINE = "Order from HackEat. Reference code: %s";
-
-    private final String username = "hackeatapp@gmail.com";
-    private final String password = "hackeater";
-    private final String from = username;
-
-    private Session session;
 
     private String orderId;
     private UserProfile user;
     private Food toOrder;
-    private String to;
 
     public OrderManager(UserProfile user, Food food) {
         this.user = user;
@@ -59,35 +41,32 @@ public class OrderManager {
     }
 
     /**
-     * Uses TLS email protocol to begin call and order {@code Food}
+     * Sends email summary and orders {@code Food} via phone
      */
     public void order() throws IOException, MessagingException {
         String message = createMessage();
 
-        generateEmailSession();
-        sendEmail(message);
+        EmailManager emailManager = new EmailManager(user, toOrder, orderId, message);
+        emailManager.email();
 
         sendOrder(toOrder.getPhone().toString(), message);
     }
 
     /**
-     * Generates a new email session with pre-defined seetings
+     * Checks whether client can connect to server
+     * @return whether client can connect to server
      */
-    private void generateEmailSession() {
-        to = toOrder.getEmail().toString();
-
-        Properties props = new Properties();
-        props.put(PROPERTY_AUTH_HEADER, PROPERTY_AUTH);
-        props.put(PROPERTY_TLS_HEADER, PROPERTY_TLS);
-        props.put(PROPERTY_HOST_HEADER, PROPERTY_HOST);
-        props.put(PROPERTY_PORT_HEADER, PROPERTY_PORT);
-
-        session = Session.getInstance(props,
-                new javax.mail.Authenticator() {
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(username, password);
-                    }
-                });
+    public static boolean netIsAvailable(String urlString) {
+        try {
+            final URL url = new URL(urlString);
+            final URLConnection conn = url.openConnection();
+            conn.connect();
+            return true;
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     /**
@@ -99,30 +78,23 @@ public class OrderManager {
     }
 
     /**
-     * Sends an email to a food's email address
-     * @param body of the email sent
-     */
-    private void sendEmail(String body) throws MessagingException {
-
-        MimeMessage message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(from));
-        message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
-        message.setSubject(String.format(SUBJECT_LINE, orderId));
-        message.setText(body);
-        Transport.send(message);
-    }
-
-    /**
       * Sends order to REST API for TwiML to pick up
       */
     private void sendOrder(String toPhone, String body) throws IOException {
         String data = toPhone + CONTENT_SEPERATOR +  body;
         URL url = new URL(REMOTE_SERVER + CREATE_PATH + orderId);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("POST");
+        con.setRequestMethod(REQUEST_METHOD);
         con.setDoOutput(true);
-        con.getOutputStream().write(data.getBytes("UTF-8"));
+        con.getOutputStream().write(data.getBytes(CHARSET_ENCODING));
         con.getInputStream();
         con.disconnect();
+    }
+
+    /**
+     * Returns the orderId for this object
+     */
+    public String getOrderId() {
+        return this.orderId;
     }
 }

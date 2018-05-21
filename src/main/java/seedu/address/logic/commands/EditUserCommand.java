@@ -15,15 +15,13 @@ import java.util.Set;
 import seedu.address.commons.util.CollectionUtil;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.food.Address;
-import seedu.address.model.food.Food;
 import seedu.address.model.food.Name;
 import seedu.address.model.food.Phone;
-import seedu.address.model.food.UniqueFoodList;
 import seedu.address.model.food.allergy.Allergy;
 import seedu.address.model.user.UserProfile;
 import seedu.address.model.user.exceptions.DuplicateUserException;
 
-//@@author {tohcheryl}
+//@@author tohcheryl
 /**
  * Edits the details of a user
  */
@@ -44,7 +42,7 @@ public class EditUserCommand extends UndoableCommand {
 
     public static final String MESSAGE_EDIT_USER_SUCCESS = "Edited User: %1$s";
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
-    public static final String MESSAGE_DUPLICATE_USER = "New user profile is the same as the one set previously.";
+    public static final String MESSAGE_DUPLICATE_USER = "Edited user profile is the same as the one set previously.";
 
     private final EditUserCommand.EditUserDescriptor editUserDescriptor;
 
@@ -52,7 +50,8 @@ public class EditUserCommand extends UndoableCommand {
     private UserProfile editedUser;
 
     /**
-     * @param editUserDescriptor details to edit the food with
+     * Creates a new EditUserCommand
+     * @param editUserDescriptor An EditUserDescriptor object which contains the updated attribute values
      */
     public EditUserCommand(EditUserCommand.EditUserDescriptor editUserDescriptor) {
         requireNonNull(editUserDescriptor);
@@ -90,8 +89,6 @@ public class EditUserCommand extends UndoableCommand {
         Set<Allergy> updatedAllergies = editUserDescriptor.getAllergies().orElse(userToEdit.getAllergies());
 
         UserProfile editedUser = new UserProfile(updatedName, updatedPhone, updatedAddress, updatedAllergies);
-        Set<Food> recentFoods = userToEdit.getRecentFoods();
-        editedUser.setRecentFoods(new UniqueFoodList(recentFoods));
         return editedUser;
     }
 
@@ -126,7 +123,7 @@ public class EditUserCommand extends UndoableCommand {
         public EditUserDescriptor() {}
 
         /**
-         * Copy constructor.
+         * Creates a new EditUserDescriptor.
          * A defensive copy of {@code allergies} is used internally.
          */
         public EditUserDescriptor(EditUserCommand.EditUserDescriptor toCopy) {
@@ -168,7 +165,7 @@ public class EditUserCommand extends UndoableCommand {
         }
 
         /**
-         * Sets {@code allergies} to this object's {@code allergies}.
+         * Sets the current set of {@code allergies} to the {@code allergies} set provided
          * A defensive copy of {@code allergies} is used internally.
          */
         public void setAllergies(Set<Allergy> allergies) {

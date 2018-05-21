@@ -44,24 +44,25 @@
           </VBox>
 
           <VBox>
-            <StackPane VBox.vgrow="NEVER" fx:id="commandBoxPlaceholder" styleClass="pane-with-border">
+            <StackPane VBox.vgrow="ALWAYS" fx:id="chatPanelPlaceholder" styleClass="pane-with-border"
+                       minHeight="300" prefHeight="600" maxHeight="1200" minWidth="400" prefWidth="400" maxWidth="1000">
               <padding>
                 <Insets top="5" right="10" bottom="5" left="10"/>
               </padding>
             </StackPane>
-            <StackPane VBox.vgrow="NEVER" fx:id="resultDisplayPlaceholder" styleClass="pane-with-border"
-                       minHeight="100" prefHeight="100" maxHeight="100">
+            <StackPane VBox.vgrow="NEVER" fx:id="commandBoxPlaceholder" styleClass="pane-with-border">
               <padding>
                 <Insets top="5" right="10" bottom="5" left="10"/>
               </padding>
             </StackPane>
           </VBox>
 
-          <StackPane fx:id="userProfilePlaceholder" prefWidth="300" maxWidth="300">
+          <VBox fx:id="userProfilePanel" minWidth="250" prefWidth="250" maxWidth="270" SplitPane.resizableWithParent="false" >
             <padding>
               <Insets top="10" right="10" bottom="10" left="10"/>
             </padding>
-          </StackPane>
+            <StackPane fx:id="userProfilePlaceholder" VBox.vgrow="ALWAYS"/>
+          </VBox>
 
         </SplitPane>
 

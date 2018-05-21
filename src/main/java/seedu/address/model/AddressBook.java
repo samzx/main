@@ -64,16 +64,16 @@ public class AddressBook implements ReadOnlyAddressBook {
         this.tags.setTags(tags);
     }
 
-    //@@author {tohcheryl}
+    //@@author tohcheryl
     /**
-     * Initialises user profile with {@code profile}.
+     * Sets the current user profile to the input {@code profile}.
      */
     public void initUserProfile(UserProfile profile) {
         this.profile = profile;
     }
 
     /**
-     * Replaces current user profile {@code target} with {@code editedProfile}.
+     * Replaces the current user profile with {@code editedProfile}.
      * @throws DuplicateUserException if there is no change in user profile
      */
     public void updateUserProfile(UserProfile editedProfile) throws DuplicateUserException {

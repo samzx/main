@@ -4,16 +4,18 @@ import static seedu.address.ui.testutil.GuiTestAssert.assertPanelDisplaysUser;
 
 import java.util.logging.Logger;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import guitests.guihandles.UserProfilePanelHandle;
+import javafx.scene.image.Image;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.user.UserProfile;
 import seedu.address.model.util.SampleDataUtil;
 import seedu.address.testutil.UserProfileBuilder;
 
-//@@author {tohcheryl}
+//@@author tohcheryl
 public class UserProfilePanelTest extends GuiUnitTest {
 
     private static final ReadOnlyAddressBook ADDRESS_BOOK = SampleDataUtil.getSampleAddressBook();
@@ -34,6 +36,16 @@ public class UserProfilePanelTest extends GuiUnitTest {
         userProfilePanel.setUserProfile(userWithAllergies);
         uiPartRule.setUiPart(userProfilePanel);
         assertPanelDisplay(userProfilePanel, userWithAllergies);
+    }
+
+    @Test
+    public void getSquareImage() {
+        Image testImage = new Image("file:docs/images/StorageClassDiagram.png");
+        UserProfilePanel userProfilePanel = new UserProfilePanel(ADDRESS_BOOK);
+        Image outputImage = userProfilePanel.getSquareImage(testImage);
+        int width = (int) outputImage.getWidth();
+        int height = (int) outputImage.getHeight();
+        Assert.assertEquals(width, height);
     }
 
     /**

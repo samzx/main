@@ -63,7 +63,7 @@ Format: `help`
 === Adding a food in a single line: `add`
 
 Adds a food to HackEat +
-Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG] [alg/ALLERGY]...`
+Format: `add n/NAME p/PHONE_NUMBER [e/EMAIL] [a/ADDRESS] [t/TAG] [alg/ALLERGY]...`
 
 [NOTE]
 Name and phone fields must not be left blank
@@ -77,29 +77,25 @@ Examples:
 * `add n/Hainanese Chicken Rice t/chinese e/tiantianchicken@maxwell.sg a/Maxwell Food Centre p/96914852 t/protein alg/msg`
 
 // tag::add[]
-=== Adding a food interactively: `add` [Proposed to finish in v1.5]
+=== Adding a food interactively: `add`
 
 Adds a food to HackEat using an interactive, chat-like experience where HackEat asks you questions about your food
 so you never have to remember the format for `add` again! +
 Format: `add`
 
-[NOTE]
-All fields are required in the interactive `add` command.
-
-[TIP]
-A food should have 1 or more tags and allergies. Currently 0 tags and allergies is not supported for interactive mode.
-
 Example:
 
-* `add` [Press Enter] > `What's the name of your food?`
-* `Sweet Chili Fish Burger` [Press Enter] > `And phone number of restaurant?`
-* `123133123` [Press Enter] > `Is there an email?`
-* `email@email.com` [Press Enter] > `Where it @ fam?`
-* `2 Clementi Road` [Press Enter] > `Any tags?`
-* `burger` [Press Enter] > `Anything else? Type (n/N) to stop.`
-* `n` [Press Enter] > `Any allergies?`
-* `peanut` [Press Enter] > `Anything else? Type (n/N) to stop.`
-* `n` [Press Enter] > `Success!`
+* `add` [Press Enter] > `What's the food called?`
+* `Sweet Chili Fish Burger` [Press Enter] > `Restaurant phone number?`
+* `123133123` [Press Enter] > `And their email? [Enter] to skip.`
+* `email@email.com` [Press Enter] > `Where they located @ fam? [Enter] to skip.`
+* `2 Clementi Road` [Press Enter] > `$$$? [Enter] to skip.`
+* [Press Enter] > `U rate or what? [Enter] to skip.`
+* `5` [Press Enter] > `Where those tags at? [Enter] to skip.`
+* `burger` [Press Enter] > `Anything else? Type [Enter] to stop.`
+* [Press Enter] > `Does this food have any allergies? Type [Enter] to skip.`
+* `peanut` [Press Enter] > `Anything else? Type [Enter] to stop.`
+* [Press Enter] > `Success!`
 // end::add[]
 
 === Listing all foods : `list`
@@ -110,14 +106,16 @@ Format: `list`
 === Editing a food : `edit`
 
 Edits an existing food in HackEat. +
-Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [r/RATING] [pr/PRICE] [t/TAG]...`
+Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [r/RATING] [pr/PRICE] [t/TAG]... [alg/ALLERGY]...`
 
 ****
 * Edits the food at the specified `INDEX`. The index refers to the index number shown in the last food listing. The index *must be a positive integer* 1, 2, 3, ...
 * At least one of the optional fields must be provided.
 * Existing values will be updated to the input values.
 * When editing tags, the existing tags of the food will be removed i.e adding of tags is not cumulative.
+* When editing allergies, the existing allergies of the food will be removed i.e adding of allergies is not cumulative.
 * You can remove all the food's tags by typing `t/` without specifying any tags after it.
+* You can remove all the food's allergies by typing `alg/` without specifying any allergies after it.
 ****
 
 Examples:
@@ -163,29 +161,9 @@ Examples:
 * `list` +
 `delete 2` +
 Deletes the 2nd food in HackEat.
-* `find Betsy` +
+* `find Brownies` +
 `delete 1` +
 Deletes the 1st food in the results of the `find` command.
-
-=== Selecting a food : `select`
-
-Selects the food identified by the index number used in the last food listing. +
-Format: `select INDEX`
-
-****
-* Selects the food and loads the Google search page the food at the specified `INDEX`.
-* The index refers to the index number shown in the most recent listing.
-* The index *must be a positive integer* `1, 2, 3, ...`
-****
-
-Examples:
-
-* `list` +
-`select 2` +
-Selects the 2nd food in HackEat.
-* `find Rice` +
-`select 1` +
-Selects the 1st food in the results of the `find` command.
 
 === Listing entered commands : `history`
 
@@ -253,7 +231,7 @@ Sets user details to personalise the HackEat application so that food
 can be delivered to the correct address and deliverers can contact the user via his/her phone number.
 Users can also specify their allergies so that certain foods can removed from HackEat's smart food
 recommendations.
-Format: `userconfig n/NAME p/PHONE a/ADDRESS [alg/ALLERGY]`
+Format: `userconfig n/NAME p/PHONE a/ADDRESS [alg/ALLERGY]...`
 
 Examples:
 
@@ -264,8 +242,8 @@ Sets user profile of Herbert Williams.
 
 // tag::edituser[]
 === Editing user profile: `edituser`
-Edits user details
-Format: `edituser [n/NAME] [p/PHONE] [a/ADDRESS] [alg/ALLERGY]`
+Edits user details i.e. name, phone, address and allergies so that information of the user can be
+updated easily. Format: `edituser [n/NAME] [p/PHONE] [a/ADDRESS] [alg/ALLERGY]...`
 
 ****
 * At least one of the optional fields must be provided.
@@ -283,7 +261,8 @@ Edits the phone number and address of the user to be `61234567` and `Blk 654 Cas
 // tag::changepic[]
 === Setting a profile picture: `changepic`
 
-Changes a user's profile picture to one that the user has selected. Works best for square images.
+Changes a user's profile picture to one that the user has selected. Works best for square images
+where your face is positioned right at the center.
 
 Format: `changepic`
 // end::changepic[]
@@ -296,29 +275,31 @@ Format: `clear`
 // tag::orderfood[]
 === Order food: `order`
 
-Orders food given with or without an index.
-
-* If no index is given, a food will be chosen for you.
-The food chosen is determined to be both desireable yet, not too determanistic that it will always be orderd.
+Orders food.
 
 * If index is given, will order the food at the specified index.
 
-* This command will not order foods which you have allergies for (magenta tags).
+* If no index is given, a food will be chosen for you.
+The food chosen is determined to be both desirable yet, not too deterministic that it will always be ordered.
 
-* Ordering may take some time as email is sent.
+* This command will not order foods which you have allergies for.
+
+* Ordering may take some time as email and phone call is prepared.
 
 Food is ordered by:
 
- Emailing the restaurant of the associated food for a request.
+. Emailing the restaurant of the associated food for a request, and summary of the order (for recording purposes).
 
- Sending a request to a black-box server which initiates a phone call to food's phone number of the same message.
+. Sending a request to our server which initiates a phone call to food's phone number of the same message.
+
+ Make sure that the food's contact details are correct, specifically, the phone is a Singaporean number.
 
 Format: `order [INDEX]` or `order`
 
 Example:
 
-- `order 2` orders the second listed food
-- `order` orders a heuristically selected food from listed food
+- `order 2` orders the second food listed
+- `order` selects a food from the list to be ordered for you
 // end::orderfood[]
 
 === Exiting the program : `exit`
@@ -330,12 +311,6 @@ Format: `exit`
 
 HackEat data are saved in the hard disk automatically after any command that changes the data. +
 There is no need to save manually.
-
-// tag::dataencryption[]
-=== Encrypting data files `[coming in v2.0]`
-
-_{explain how the user can enable/disable data encryption}_
-// end::dataencryption[]
 
 // tag::nlp[]
 === Natural Language Chatbot `[coming in v2.0]`
@@ -355,12 +330,12 @@ Example:
 
 == Command Summary
 
-* *Add* `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]...` +
+* *Add* `add n/NAME p/PHONE_NUMBER [e/EMAIL] [a/ADDRESS] [t/TAG]... [alg/ALLERGY]...` +
 e.g. `add n/Mee Rebus p/22224444 e/meerebus@example.com a/123, Clementi Rd, 1234665 t/malay t/spicy`
 * *Clear* : `clear`
 * *Delete* : `delete INDEX` +
 e.g. `delete 3`
-* *Edit* : `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]...` +
+* *Edit* : `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]... [alg/ALLERGY]...` +
 e.g. `edit 2 n/Mee Soto e/meesoto@example.com`
 * *Find* : `find KEYWORD [MORE_KEYWORDS]` +
 e.g. `find Laksa Sushi`
@@ -371,3 +346,7 @@ e.g.`select 2`
 * *History* : `history`
 * *Undo* : `undo`
 * *Redo* : `redo`
+* *Order* : `order [INDEX]`
+* *Edit user details* : `edituser [n/NAME] [p/PHONE_NUMBER] [a/ADDRESS] [alg/ALLERGY]...` +
+e.g. `edituser n/Lucas Ho alg/peanuts`
+* *Change profile picture* : `changepic`

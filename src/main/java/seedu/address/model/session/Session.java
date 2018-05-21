@@ -14,17 +14,17 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.Prompt;
 import seedu.address.logic.commands.exceptions.CommandException;
 
-//@@author {jaxony}
+//@@author jaxony
 
 /**
  * Represents a continuous chat or interaction between the user
  * and the system.
  */
 public abstract class Session {
-    public static final String END_MULTI_VALUE_FIELD = "";
-    public static final String OPTIONAL_MESSAGE = "Press [Enter] to skip this optional field.";
+    public static final String END_FIELD = "";
+    public static final String OPTIONAL_MESSAGE = "[Enter] to skip.";
     public static final String SUCCESS_MESSAGE = "Success!";
-    public static final String ANYTHING_ELSE_MESSAGE = "And anything else? Type [Enter] to stop.";
+    public static final String ANYTHING_ELSE_MESSAGE = "And anything else?\nType [Enter] to stop.";
     public static final String TRY_AGAIN_MESSAGE = "Please try again: ";
     protected final EventsCenter eventsCenter;
     protected Collection<String> stringBuffer;
@@ -42,73 +42,15 @@ public abstract class Session {
         isParsingMultivaluedField = false;
     }
 
-    /**
-     * Gets the next prompt message in the interactive session.
-     *
-     * @return feedback to the user
-     * @throws CommandException If end() throws exception
-     */
-    private CommandResult getNextPromptMessage() throws CommandException {
-        promptIndex++;
-        if (!sessionHasPromptsLeft()) {
-            end();
-            return new CommandResult(SUCCESS_MESSAGE);
-        }
-        Prompt prompt = getCurrentPrompt();
-        if (prompt.isMultiValued) {
-            setupForMultiValued();
-        }
-        return buildCommandResultFromPrompt(prompt);
+    public static String buildMessageFromPrompt(Prompt p) {
+        return p.isOptional ? p.getMessage() + "\n" + OPTIONAL_MESSAGE : p.getMessage();
     }
-
-    /**
-     * Sets up Session state for processing multi valued field.
-     */
-    private void setupForMultiValued() {
-        isParsingMultivaluedField = true;
-        resetStringBuffer();
-    }
-
-    /**
-     * Constructs a CommandResult from a prompt.
-     *
-     * @param prompt What the system is asking from the user. May be optional.
-     * @return Feedback to user.
-     */
-    private CommandResult buildCommandResultFromPrompt(Prompt prompt) {
-        String message = prompt.getMessage();
-        if (prompt.isOptional) {
-            message += " " + OPTIONAL_MESSAGE;
-        }
-        return new CommandResult(message);
-    }
-
-    private boolean sessionHasPromptsLeft() {
-        return promptIndex < prompts.size();
-    }
-
-    /**
-     * Ends the active Session.
-     *
-     * @throws CommandException If finishCommand() throws exception
-     */
-    private void end() throws CommandException {
-        finishCommand();
-        eventsCenter.post(new EndActiveSessionEvent());
-    }
-
-    private Prompt getCurrentPrompt() {
-        return prompts.get(promptIndex);
-    }
-
-    protected abstract void finishCommand() throws CommandException;
 
     /**
      * Interprets user input in the CommandBox.
-     *
      * @param userInput Text typed in by the user in the CommandBox
-     * @return feedback to user
-     * @throws CommandException
+     * @return Feedback to user as a {@code CommandResult}.
+     * @throws CommandException If the executed command is invalid.
      */
     public CommandResult interpretUserInput(String userInput) throws CommandException {
         logger.info("Received user input in current Session: " + userInput);
@@ -118,35 +60,77 @@ public abstract class Session {
             if (p.isMultiValued) {
                 return handleInputForMultiValuedField(userInput);
             } else {
-                parseInputForField(p.getField(), userInput);
-                return getNextPromptMessage();
+                return handleInputForField(userInput);
             }
         } catch (IllegalValueException ive) {
             if (p.isMultiValued) {
-                // a multi value thingo failed during parsing, need to refresh
                 resetStringBuffer();
             }
-            return new CommandResult(TRY_AGAIN_MESSAGE + ive.getMessage());
+            return new CommandResult(TRY_AGAIN_MESSAGE + ive.getMessage(), false);
         }
     }
 
     /**
-     * Processes and responds to user input when processing a multi valued field.
-     *
+     * Starts the session by returning the first prompt in the interaction.
+     * @return The message of the first prompt.
+     */
+    public CommandResult start() throws CommandException {
+        return new CommandResult(getCurrentPrompt().getMessage());
+    }
+
+    protected abstract void parseInputForMultivaluedField(String fieldName) throws IllegalValueException;
+
+    protected abstract void parseInputForField(String fieldName, String userInput) throws IllegalValueException;
+
+    protected abstract void finishCommand() throws CommandException;
+
+    private Prompt getCurrentPrompt() {
+        return prompts.get(promptIndex);
+    }
+
+    /**
+     * Processes user input for a single-value field, including optional fields.
+     * @param userInput String input from user.
+     * @return Feedback to the user as a {@code CommandResult}.
+     * @throws CommandException If command execution leads to an error.
+     * @throws IllegalValueException If input parsing leads to an error.
+     */
+    private CommandResult handleInputForField(String userInput) throws CommandException, IllegalValueException {
+        Prompt p = getCurrentPrompt();
+        boolean canUserSkipField = didUserEndPrompt(userInput) && p.isOptional;
+        if (!canUserSkipField) {
+            parseInputForField(p.getFieldName(), userInput);
+        }
+        return getNextPromptMessage();
+    }
+
+    private boolean sessionHasPromptsLeft() {
+        return promptIndex < prompts.size();
+    }
+
+    /**
+     * Ends the active {@code Session}.
+     * @throws CommandException If command execution fails.
+     */
+    private void endSession() throws CommandException {
+        eventsCenter.post(new EndActiveSessionEvent());
+        finishCommand();
+    }
+
+    /**
+     * Processes user input for a multi valued field, including optional fields.
      * @param userInput String input from user.
      * @return Feedback to the user.
-     * @throws CommandException If parsing goes wrong.
+     * @throws CommandException If command execution leads to an error.
      */
     private CommandResult handleInputForMultiValuedField(String userInput)
             throws CommandException, IllegalValueException {
         Prompt p = getCurrentPrompt();
         if (didUserEndPrompt(userInput)) {
-            // user wants to go to the next prompt now
-            parseInputForMultivaluedField(p.getField());
+            parseInputForMultivaluedField(p.getFieldName());
             isParsingMultivaluedField = false;
             return getNextPromptMessage();
         }
-        // user entered input that can be processed
         addAsMultiValue(userInput);
         return askForNextMultivalue();
 
@@ -157,12 +141,53 @@ public abstract class Session {
     }
 
     private boolean didUserEndPrompt(String userInput) {
-        return userInput.equals(END_MULTI_VALUE_FIELD);
+        return userInput.equals(END_FIELD);
+    }
+
+    /**
+     * Gets the next prompt message in the interactive session.
+     * @return Feedback to the user as a {@code CommandResult}.
+     * @throws CommandException If command execution fails.
+     */
+    private CommandResult getNextPromptMessage() throws CommandException {
+        promptIndex++;
+        if (!sessionHasPromptsLeft()) {
+            endSession();
+            return buildSuccessfulCommandResult();
+        }
+        Prompt prompt = getCurrentPrompt();
+        if (prompt.isMultiValued) {
+            setupForMultiValued();
+        }
+        return buildCommandResultFromPrompt(prompt);
+    }
+
+    private CommandResult buildSuccessfulCommandResult() {
+        return new CommandResult(SUCCESS_MESSAGE);
+    }
+
+    /**
+     * Establishes Session state for processing a field containing
+     * one or more values.
+     */
+    private void setupForMultiValued() {
+        isParsingMultivaluedField = true;
+        resetStringBuffer();
+    }
+
+    /**
+     * Constructs a CommandResult from a prompt.
+     * @param prompt What the system is asking from the user. May be optional.
+     * @return Feedback to user.
+     */
+    private static CommandResult buildCommandResultFromPrompt(Prompt prompt) {
+        String message = buildMessageFromPrompt(prompt);
+        return new CommandResult(message);
     }
 
     /**
      * Adds user input to a collection of strings for processing later
-     * when all input has been collected from the user.
+     * when all input has been collected from the user for the current command.
      * @param userInput String from user.
      */
     private void addAsMultiValue(String userInput) {
@@ -170,18 +195,7 @@ public abstract class Session {
         logger.info("Added " + userInput + " as a multi value field");
     }
 
-    protected abstract void parseInputForMultivaluedField(Class field) throws IllegalValueException;
-
-    protected abstract void parseInputForField(Class field, String userInput) throws IllegalValueException;
-
     private CommandResult askForNextMultivalue() {
         return new CommandResult(ANYTHING_ELSE_MESSAGE);
-    }
-
-    /**
-     * Start the session by giving the first prompt in the interaction.
-     */
-    public CommandResult start() throws CommandException {
-        return new CommandResult(getCurrentPrompt().getMessage());
     }
 }

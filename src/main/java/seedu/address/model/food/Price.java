@@ -9,23 +9,25 @@ import java.util.Locale;
 import org.apache.commons.validator.routines.BigDecimalValidator;
 import org.apache.commons.validator.routines.CurrencyValidator;
 
-//@@ author {tohcheryl}
+//@@author tohcheryl
 /**
  * Represents a Food's price in HackEat.
- * Guarantees: immutable; is valid as declared in {@link #isValidPrice(String)}
  */
 public class Price {
 
     public static final String DEFAULT_PRICE = "0";
     public static final String MESSAGE_PRICE_CONSTRAINTS =
-            "Price can only contain currency symbol and numbers";
+            "Price should contain only numbers and a single decimal point if necessary."
+                    + " Prices that have more than 2 decimal places will be truncated."
+                    + " A $ sign can be prefixed to the price but it is not required.";
+    public static final String CLASS_NAME = "Price";
     private static Locale currentLocale = Locale.US;
     private String value;
 
     /**
      * Constructs a {@code Price}.
      *
-     * @param price A valid price.
+     * @param price A valid price given as a String.
      */
     public Price(String price) {
         requireNonNull(price);
@@ -53,14 +55,14 @@ public class Price {
 
     /**
      * Sets price of Food without currency symbol.
-     * Truncates given price to the appropriate number of dp.
+     * Truncates given price to the appropriate number of decimal places.
      */
     public void setPrice(String inputPrice) {
         BigDecimalValidator validator = CurrencyValidator.getInstance();
         value = validator.validate(inputPrice, currentLocale).toString();
     }
 
-    //@@author {samzx}
+    //@@author samzx
 
     /**
      * Parses price value into more recognisable price format with $.
@@ -71,9 +73,9 @@ public class Price {
         return "$" + value;
     }
 
-    //@@author {tohcheryl}
+    //@@author tohcheryl
     /**
-     * Returns price of Food as a BigDecimal.
+     * Returns price of Food as a String.
      */
     public String getValue() {
         return value;

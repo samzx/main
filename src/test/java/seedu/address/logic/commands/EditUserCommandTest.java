@@ -21,7 +21,7 @@ import seedu.address.model.user.UserProfile;
 import seedu.address.testutil.EditUserDescriptorBuilder;
 import seedu.address.testutil.UserProfileBuilder;
 
-//@@author {tohcheryl}
+//@@author tohcheryl
 public class EditUserCommandTest {
 
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
@@ -59,8 +59,6 @@ public class EditUserCommandTest {
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
-
-    // execute_noFieldsSpecified_sucess() to be implemented
 
     @Test
     public void execute_duplicateUserProfile_failure() {

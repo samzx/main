@@ -264,11 +264,11 @@ public class AddCommandSystemTest extends AddressBookSystemTest {
         assertCommandFailure(command, Tag.MESSAGE_TAG_CONSTRAINTS);
     }
 
-    //@@author {jaxony}
+    //@@author jaxony
     @Test
     public void addInteractive() {
         /* -------------------------- Perform add in interactive mode ------------------------------ */
-        assertCommandSuccessWithoutSync(AddCommand.COMMAND_WORD, getModel(), AddCommand.prompts.get(0).getMessage());
+        assertCommandSuccessWithoutSync(AddCommand.COMMAND_WORD, getModel(), AddCommand.PROMPTS.get(0).getMessage());
     }
     //@@author
 
@@ -323,7 +323,7 @@ public class AddCommandSystemTest extends AddressBookSystemTest {
         assertStatusBarUnchangedExceptSyncStatus();
     }
 
-    //@@author {jaxony}
+    //@@author jaxony
     /**
      * Performs the same verification as {@code assertCommandSuccess(String, Food)} except asserts that
      * the,<br>

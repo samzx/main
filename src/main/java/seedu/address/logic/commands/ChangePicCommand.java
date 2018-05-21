@@ -10,7 +10,7 @@ import seedu.address.commons.core.EventsCenter;
 import seedu.address.commons.events.ui.ProfilePictureChangedEvent;
 import seedu.address.logic.commands.exceptions.CommandException;
 
-//@@author {tohcheryl}
+//@@author tohcheryl
 /**
  * Changes the profile picture of the user
  */
@@ -20,8 +20,10 @@ public class ChangePicCommand extends Command {
 
     public static final String MESSAGE_PIC_CHANGED_ACKNOWLEDGEMENT = "Profile picture has been changed!";
 
+    public static final String MESSAGE_PIC_CHANGED_FAILURE = "Unable to set profile picture";
+
     /**
-     * Selects a profile picture
+     * Allows user to select a profile picture
      */
     public File selectProfilePic() {
         FileChooser fileChooser = new FileChooser();
@@ -37,8 +39,8 @@ public class ChangePicCommand extends Command {
         File selectedFile = selectProfilePic();
         try {
             FileUtils.copyFile(selectedFile, outputFile);
-        } catch (IOException e) {
-            throw new CommandException("Unable to save profile picture");
+        } catch (IOException | NullPointerException e) {
+            throw new CommandException(MESSAGE_PIC_CHANGED_FAILURE);
         }
         EventsCenter.getInstance().post(new ProfilePictureChangedEvent());
         return new CommandResult(MESSAGE_PIC_CHANGED_ACKNOWLEDGEMENT);

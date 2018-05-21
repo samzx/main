@@ -1,4 +1,4 @@
-= AddressBook Level 4 - Developer Guide
+= HackEat - Developer Guide
 :toc:
 :toc-title:
 :toc-placement: preamble
@@ -358,32 +358,9 @@ image::UndoRedoActivityDiagram.png[width="650"]
 ** Cons: Requires dealing with commands that have already been undone: We must remember to skip these commands. Violates Single Responsibility Principle and Separation of Concerns as `HistoryManager` now needs to do two * different things.
 // end::undoredo[]
 
-// tag::addshortcuts[]
-=== [V2.0] Add Shortcuts
-==== Proposed Implementation
-A new Command class `AddShortcutCommand` will be created. A `Shortcut` class will be added to Model. An ArrayList of Commands that is linked to a particular shortcut will be saved. Every `Person` object will have a HashMap which stores the different Shortcuts they have created.
-
-Suppose that a user has just launched the application. The user decides to create a new shortcut for ordering his favorite food. He will type in `mksc orderfave` and he will then be prompted to type in the commands that he would like to associate with that particular shortcut, for e.g. `find butter, order 1`.
-The sequence of commands he has typed in will be stored in a `List`. The `List`, together with the name of the shortcut will then be stored in a `HashMap` as part of the attributes of the `Person` class.
-
-image::UpdatedLogicCommandClassDiagram.png[width="800"]
-==== Design Considerations
-
-===== Aspect: Whether to make AddShortcut undoable
-
-* **Alternative 1:** Make it undoable
-** Pros: Provides user with greater flexibility
-
-** Cons: Harder to implement
-
-* **Alternative 2:** Do not make it undoable
-** Pros: Easier to implement
-
-** Cons: Less user friendly
-// end::addshortcuts[]
-
 // tag::userconfig[]
 === Configuring the User Profile
+
 ==== Motivation
 It's nice to have someone greet you as your friend. HackEat makes its users comfortable and feel
 welcomed whenever they open their app. This is possible because a new feature has been implemented that
@@ -398,6 +375,7 @@ In order to support the user profile, a new package was created under the `Model
 Inside it contains a `UserProfile` class, which holds the app state of the user's profile. `Allergy` is also a new object
 in HackEat, and so an `Allergy` class was created in a new `allergy` package of the `Model` component. In order to support
 multiple allergies for a single user, a `UniqueAllergyList` was also created under the same package.
+
 image::model-component-with-user-profile.png[width="600"]
 
 ==== Saving to Storage
@@ -413,26 +391,7 @@ New classes required to support XML of User Profile:
 This was quite simple. Only one new method was required to be added to the `AddressBook` class to initialize
 an `AddressBook` with the loaded `UserProfile`.
 
-
-==== Design Considerations
-
-===== `Update` instead of `Add`
-It was simpler to implement a single `AddressBook#updateUserProfile` method instead of
-an `AddressBook#addUserProfile` and an update method. The update method simply sets the current `profile`
-property in `AddressBook` to the new incoming `profile`.
-
-By simply replacing the property, you don't need to check if the property is not null before
-updating the profile. You also don't need to check if the profile is null before choosing to add a new
-profile to the application. Separating add and update functionalities works for Food, but not for profile as the
-additional complexity is unnecessary.
 // end::userconfig[]
-
-// tag::dataencryption[]
-=== [Proposed] Data Encryption
-
-_{Explain here how the data encryption feature will be implemented}_
-
-// end::dataencryption[]
 
 === Logging
 
@@ -454,64 +413,193 @@ We are using `java.util.logging` package for logging. The `LogsCenter` class is 
 
 Certain properties of the application can be controlled (e.g App name, logging level) through the configuration file (default: `config.json`).
 
+// tag::changepic[]
+=== Changing of Profile Picture
+
+==== What
+The `changepic` command allows users to update their profile picture.
+
+==== Why
+As developers, we believe in creating applications that build connections with our target users. HackEat
+strives to achieve this by providing programmers with an option to spruce up the app a little by adding
+their own picture to it. Besides that, the user profile picture could be used in the future for easy identification
+of the customer by the deliverer.
+
+==== How
+The `changepic` command triggers the opening of a new window which allows the user to easily select an image.
+This image is then saved locally and the UI is updated to reflect the change.
+
+==== Current Implementation
+image::ChangePicSequenceDiagram.PNG[width="600"]
+
+When HackEat is first launched, a default profile picture is downloaded from the Internet.
+As the default profile picture should be displayed when the application starts up, a
+`MainApp#initProfilePic` was created to ensure that the application displays the picture.
+This picture is stored locally on the same directory as the jar file.
+Should the user desire to change the profile picture, the `changepic` command can be utilised.
+When the command is executed, a window pops up and the user selects an appropriate image.
+The existing profile picture is overwritten by the newly selected image.
+Upon successful execution, a new `ProfilePicChangedEvent` will be raised.
+This is handled by the `UserProfilePanel` of the `UI` component which then crops the image, if necessary,
+and then updates the UI.
+
+==== Design Considerations
+
+===== Aspect: Saving the picture
+* **Alternative 1:** Saving it in HackEat as a Base64 encoded String
+** Pros: It was more intuitive to store the picture together with the user profile in HackEat.
+
+** Cons: Because of the length of the Base64 encoded string, it makes the xml file
+very clunky.
+
+* **Alternative 2 (Current choice):** Save it as an image file in the same directory as the jar file.
+** Pros: More direct and easier to implement.
+
+** Cons: Use of this application will be restricted to a single user.
+
+* **Alternative 3:** Save the file path in the user profile
+** Pros: It was more intuitive to store the file path in the user profile.
+
+** Cons: More tedious than Alternative 2 as a new field would have to be added to the user profile.
+Since there exists only one `UserProfile` for this application, such an implementation was
+unnecessary.
+
+// end::changepic[]
+
+// tag::edituser[]
+=== Editing of profile details
+
+==== What
+The `edituser` command allows a user to update their details easily without having to provide all
+the compulsory details again.
+
+==== Why
+No programmer likes to have his/her flow state broken, especially by a long command that requires
+one to key in repetitive details. Hence, the `edituser` command was created to allow programmers to
+speedily update their profile details.
+
+==== How
+Under the `EditUserCommand`, a copy of the existing user with the updated details is created.
+This is then passed on to `model` for the user profile to be updated.
+
+==== Current Implementation
+image::EditUserSequenceDiagramLogic.PNG[width="600"]
+. Upon parsing of an `EditUserCommand`, an `EditUserDescriptor` object is created.
+. The attribute values of this object will then be set to the edited values.
+. The `EditUserDescriptor` object will be passed as an argument to the constructor of the `EditUserCommand`.
+. The `EditUserCommand` is then preprocessed.
+.. The existing user profile is retrieved from `model`.
+.. Based on the attributes which have been set in the `EditUserDescriptor` object, a new `UserProfile`
+object with the updated attribute values is created.
+. The new `UserProfile` is then passed to `model`.
+. `model` then updates the user profile of HackEat.
+. This causes an event to be raised which then causes HackEat to be saved to persistent storage.
+
+==== Design Considerations
+
+===== Aspect: Setting a user's details
+* **Alternative 1:** Modifying the user details directly from Logic
+** Pros: It was more intuitive to change the details of the existing user profile from the Logic Component.
+
+** Cons: This can result in increased coupling among the classes. As a result, many components would
+have to be modified, which renders this method to be more complicated than the alternative.
+
+* **Alternative 2 (Current choice):** Creation of a new EditUserDescriptor object
+
+** Pros: A cleaner implementation where there is less coupling. Less components would have to be modified
+and it facilitates the execution of the UndoableCommand.
+
+** Cons: Overhead is incurred as a new copy of the UserProfile has to be created each time the user updates
+his/her details.
+// end::edituser[]
+
 // tag::order[]
 === `order` command feature
 
 ==== What
-The order command is the core of the application. It allows the program to order the food for the user. At it's core,
-it job is to select the most probable food that the user desires and orders it via phone.
+The order command is the core of the application. It automates the food ordering process. It can automate the food
+selection process, to minimise decision making strain, while also sending the order to the restaurant, reducing the
+time required to order food.
 
 ==== Why
-The motivation is that programmers are lazy and that eating food is mandatory even amidst long hacking sessions.
-This command automates the food ordering process with a quick command, that is the `order` command, streamlining the
-food selecting and ordering process.
+Programmers often ignore their appetite amidst long coding sessions, leaving their stomach rumbling. It is often too
+much effort to switch out of the flow state to begin the laborious process of ordering food. HackEat changes this.
+With a simple `order` command, the whole process, food selection and ordering, is streamlined.
 
 ==== How
-image::order-command-flow-chart.png[width="600"]
-. Order command searches through existing Foods in the HackEat book
-.. Within each Food, a score is derived based on number of factors such as: times ordered, mood, rating, price and
- allergies.
-. Foods will be ordered randomly with a preference for cheaper and higher rated foods.
-. The program will email the restaurant with a confirmation
-. Furthermore, a phone call will be held if applicable
-.. A message generated by the client will be sent to a black-box server.
-Code can be found here: https://github.com/CS2103JAN2018-W10-B3/hackeat-server
-.. The server will initiate a phone call via Twillio (or an equivalent service) to the chosen food's phone number.
-.. TwiML (or equivalent service) will be used to translate text to voice to communicate with the restaurant on the
-other end and order a food with a pre-canned message. Shown below:
+===== Overview Flow chart
 
-It is then assumed that the restaurant will then send the food over and the user will pay for the food.
+image::orderer--order-command.png[width="600"]
+. Order command searches through existing Foods in the HackEat book
+.. Within each Food, a score is derived based on number of factors such as: rating, price and
+ allergies.
+. Foods will be ordered on a probabilistic basis, making sure a variety when ordering food often.
+. The program will email the restaurant with a record and summary of the request for food.
+. A phone call will be held to request food.
+.. A message generated by the client will be sent to our server.
+Server source code can be found here: https://github.com/CS2103JAN2018-W10-B3/hackeat-server
+.. The server will initiate a phone call using a calling service to the chosen food's phone number.
+.. A text to voice service will be used to translate text to voice to communicate with the restaurant on the
+other end and order a food with a pre-canned message.
+
+image::orderer--sequence.png[width="600"]
+
+It is then assumed that the restaurant will acknowledge the order and deliver the food to the user's address.
+The user will need to pay once it has arrived.
 
 ==== Current implementations
 
 ===== Food Selector
-image::order-command--food-selector.png[width="600"]
+image::orderer--food-selector.png[width="600"]
 
-- Foods are given scores based on ratings and price
-- They are aligned together with a running score value and added to a list
-- They are automatically ordered by size this way
-- A random number is selected between 0 and the max running score
-- This will select a food probabilistically, based on the scores.
+* Foods are given scores based on ratings, price and allergy.
+** A high rating will result in a higher score
+** A low price will result in a higher score
+** Any allergies that the food matches with the user will immediately give the food a score of 0, eliminating it from
+the selection process
+* Foods are then given a number, based on their positions, occupying a range equivalent to their score
+ (see diagram).
+* A random number is selected between 0 and the cumulative score (max running score)
+* The random number will land on a food (shown in diagram) and be selected.
+* This will select a food probabilistically, based on the scores. A higher score will have a higher chance of selection.
 
 ===== Order Manager
 
 * Sets up a session and generates access to email server
-* Emails restaurant the order details
+* Emails restaurant the order details, an order record and summary.
 * Initiates a phone call to the food's phone number
-** v1.4 has implemented this locally via Twilio, but was changed due to current rejection of the use of the library.
-** Therefore the phone calling was delegated to a remote server.
-** The remote server accepts a HTTP POST request with the message details, and parses to create a phone call.
+** v1.4 has implemented this on client side via Twilio, but was changed due to current rejection of the use of the
+library.
+** Therefore the phone calling was delegated to a remote server, moved out of the client.
+** The remote server accepts a HTTP POST request with the message details, and create a phone call based on the message.
 
 ==== Design considerations
 
-- Email was used to avoid importing a large library and can be used in conjunction to Email to Voice message services.
+- Email was used to avoid importing a large library and can be used as a record summary for the restaurant.
 - Voice call for ordering food was also chosen as it is Universal to all restaurants that deliver food.
 Some restaurants do nto have Uber Eats or Food Panda service.
-- A server was used to handle the phone call to keep the client lightweight.
+- A server was used to handle the phone call to keep the client lightweight, and to avoid any
+library import complications.
 
 ==== Alternatives and future considerations
+
+===== Existing food ordering platform API
 A promising alternative is to use an existing API from UberEats or other food ordering services to allow more services
 added such as: delivery time tracking, more restaurants. This would guarantee the service more reliably.
+
+===== Smarter ordering AI agent
+Possibly implement smarter speech with `<Gather>` and `<Redirect>` (Twilio example).
+
+1. `<Gather>` gathers data from user in form of speech, and posts to the url /create/:id/response at the REST API.
+2. API parses the information and generates new XML data specific to the response at /order/:id/response.
+3. `<Redirect>` redirects chat flow to /order/:id/response and retrieves XML data and confirms, repeats or declines the order.
+
+API Links:
+
+* `<Gather>`
+** https://www.twilio.com/docs/voice/twiml/gather
+* `<Redirect>`
+** https://www.twilio.com/docs/voice/twiml/redirect
 // end::order[]
 
 // tag::add[]
@@ -543,12 +631,17 @@ concrete, command-specific child classes (e.g. `SessionAddCommand`).
 ===== Simplified sequence diagram for starting or continuing a `Session`
 image::add-command-interactive-start.png[width="600"]
 
-
-The abstract `Session` class provides the shared methods that control the logical flow of any interaction.
-The abstract methods `Session#parseInputForMultivaluedField` and `Session#parseInputForField` are overidden
-by concrete subclasses of `Session` because each type of `Command` needs to parse and store its
-
 ==== Design considerations
+
+===== Extensibility
+The interactive mode of communication between the user and the system was built with extensibility in mind.
+The abstract `Session` class contains the common methods that control the logical flow of any interactive command.
+The abstract methods `Session#parseInputForMultivaluedField` and `Session#parseInputForField` are overidden
+by concrete subclasses, allowing each specific type of `Command` to parse and store user input relevant to its own fields.
+Hence, the implementation of an interactive `EditCommand` and `OrderCommand` would be convenient and simple owing to important
+architectural decisions made from the beginning.
+
+===== Model or Logic?
 It was difficult to choose where to place the `Session`, `SessionAddCommand`, `SessionManager` and `SessionInterface`
 interface and classes. These classes and interface handle both application data (i.e. they should belong in the `Model`)
 as well as text parsing (i.e. they could also belong in the `Logic` component). We opted for the simplistic solution of
@@ -557,11 +650,33 @@ component.
 
 An alternative architectural design would be to have `SessionData` and `SessionLogic` separated across `Model` and
 `Logic` components. The advantage of this design is that it adheres to the strict definitions of the functions
-of each of these components. The disadvantage, which is much more costly, is the increased coupling between these
-separate components and classes. It is much more convenient to simply combine the state and logic for `Session`s in a
-single component to reduce coupling and increase cohesion, making developer efficiency higher and code organisation more
+of each of these components. The disadvantage, which is much more costly, is the increased coupling between these separate components and classes. It is much more convenient to simply combine the state and logic for `Sessions` in a single component to reduce coupling and increase cohesion, making developer efficiency higher and code organisation more
 simple.
 // end::add[]
+
+// tag::chat[]
+=== Chat UI
+
+==== What
+The `ResultDisplay` was replaced with a `ChatPanel`. The system's messages and the user's messages are now shown
+as chat messages in a chat history. The message bubbles are color coordinated based on whether the message is
+a user message, a failed system message, or a successful system message.
+
+==== Why
+The chat UI, like the interactive `add` command, aims to give our target users (hungry programmers) a fun and natural way to
+manage food and food ordering. The commands are still CLI-based, but now there is an added sense of interaction and novelty
+that delights our users.
+
+==== How
+The chat UI consists of the following set of nested JavaFX components, displayed in the object diagram below.
+
+image::object-diagram-chat-ui.png[width="600"]
+
+When the user presses `Enter` in the `CommandBox` UI component, a `NewUserMessageAvailableEvent` event is posted to the `EventCenter`.
+The `ChatPanel` is subscribed to such events, and a new message is created and added to the UI when such an event is received. The same
+approach applies to the handling of `NewResultAvailableEvents`, which represent the system's responses to user input.
+
+// end::chat[]
 
 == Documentation
 
@@ -1230,6 +1345,20 @@ These instructions only provide a starting point for testers to work on; testers
 
 _{ more test cases ... }_
 
+=== Adding a food interactively
+. Start the interactive command:
+.. Type `add` followed by 0 or more whitespaces.
+.. Type `Chinese Hot Pot` for the food's name.
+.. Type `abcadsajdl` for the phone number to get a failure message.
+.. Type `12319313123` for a correct phone number.
+.. Press Enter for the rest of the fields until the `Success` message is received.
+.. Check that the food was indeed added in the food panel on the left.
+
+. Responsive width of message
+.. Messages should be at most three-quarters of the width of the chat panel.
+.. Resize the window to see automatic resizing of the maximum width of the message bubbles.
+.. Type in a really long message (e.g., repeating the letter `a` 50 times) in response to any of the prompts. The text should wrap properly and not exceed three-quarters of the chat panel's width.
+
 === Deleting a food
 
 . Deleting a food while all foods are listed
@@ -1251,3 +1380,52 @@ _{ more test cases ... }_
 .. _{explain how to simulate a missing/corrupted file and the expected behavior}_
 
 _{ more test cases ... }_
+
+=== Ordering a food
+. Making sure emails are sent to restaurant
+.. Edit food's email to your personal email and check inbox
+... `edit 1 e/{your personal email}`
+.... Only if there is an existing food. If not, create a new food first.
+.... example: `edit 1 sam@gmail.com`
+... `order 1`
+... Check your email inbox to verify that an order has been sent.
+. Making sure phone calls are executed
+.. Edit food's phone to your personal phone (must be Singaporean number) and pick up call
+(subject to incoming international calls fee)
+... `edit 1 p/{your personal phone}`
+.... Only if there is an existing food. If not, create a new food first.
+.... example: `edit 1 p/89990000`
+... `order 1`
+... Your phone will ring from a international number. Pick up the phone, and follow the instructions (if applicable),
+then verify the message is correct.
+
+=== Editing a user profile
+. Updating the details of a user profile
+.. Prerequisite: A user profile should have been set up by default.
+.. Test case: `edituser n/Wei Wei` +
+   Expected: Only if your current profile name is not Wei Wei. +
+   Name of user profile will be updated to `Wei Wei`.
+.. Test case: `edituser alg/peanuts alg/chicken` +
+   Expected: Only if your current allergies are not peanuts and chicken. +
+   Allergies of the user will be updated to include _only_ the two provided allergies.
+
+. Scrollable user profile panel
+.. Test case: Add a huge bunch of allergies
+   Expected: Your name, phone and address will be truncated if necessary and the profile panel
+   becomes scrollable in order to display the allergies.
+
+=== Changing of profile picture
+. Replacing a profile picture with a valid picture
+.. Prerequisite: A default profile picture should have been set up.
+.. Test case: `changepic`
+   Expected: A file browser will pop up. Select a valid image file. The user profile picture +
+   should be updated to display the center of the image that has been selected.
+. Replacing a profile picture with an invalid file
+.. Test case: `changepic`
+   Expected: A file browser will pop up. Select an invalid file for e.g. a file which was not an
+   image file originally but has had its extension modified. The user profile picture(if it had existed)
+   displayed in the panel should be replaced by an empty space.
+. Hitting the cancel button of the file browser
+.. Test case: `changepic`
+   Expected: A file browser will pop up. Click on the `cancel` button. A new chat bubble displaying
+   an error message should appear.

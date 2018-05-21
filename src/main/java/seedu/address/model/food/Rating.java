@@ -3,11 +3,10 @@ package seedu.address.model.food;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
-//@@author {samzx}
+//@@author samzx
 
 /**
  * Represents a Food's rating in HackEat.
- * Guarantees: immutable; is valid as declared in {@link #isValidRating(String)}
  */
 public class Rating {
 
@@ -16,10 +15,14 @@ public class Rating {
     public static final String MESSAGE_RATING_CONSTRAINTS =
             "Please enter a number between 0 to " + MAX_RATING;
 
-    /*
-     * User must enter only a single digit.
+    /**
+     * Users must enter only a single digit.
      */
     public static final String RATING_VALIDATION_REGEX = "\\b\\d\\b";
+    public static final String CLASS_NAME = "Rating";
+
+    private static final String UNFILLED_RATING_SYMBOL = "☆";
+    private static final String FILLED_RATING_SYMBOL = "★";
 
     public final String value;
 
@@ -35,7 +38,7 @@ public class Rating {
     }
 
     /**
-     * Returns true if a given string is a valid food email.
+     * Returns true if a given string is a valid food rating.
      */
     public static boolean isValidRating(String test) {
         if (test.matches(RATING_VALIDATION_REGEX)) {
@@ -49,21 +52,22 @@ public class Rating {
 
     /**
      * Method to display ratings as stars instead of a number
-     * @return a string of colored or uncolore stars
+     * @return a string of colored or uncolored stars
      */
     public static String displayString(String value) {
-        final int rating = Integer.parseInt(value);
-        int count = rating;
-        String stars = "";
+        int count = Integer.parseInt(value);
+
+        StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < MAX_RATING; i++) {
             if (count > 0) {
-                stars += "★";
+                stringBuilder.append(FILLED_RATING_SYMBOL);
             } else {
-                stars += "☆";
+                stringBuilder.append(UNFILLED_RATING_SYMBOL);
             }
             count--;
         }
-        return stars;
+
+        return stringBuilder.toString();
     }
 
     @Override
